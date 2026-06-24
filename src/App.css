@@ -79,6 +79,36 @@ body {
   padding: 8px 0;
 }
 
+.conn-list {
+  margin-bottom: 8px;
+}
+
+.conn-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: 4px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.conn-item:hover {
+  background: var(--bg-tertiary);
+}
+
+.conn-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #40c057;
+  flex-shrink: 0;
+}
+
+.conn-name {
+  color: var(--text-primary);
+}
+
 .btn {
   background: var(--bg-tertiary);
   border: 1px solid var(--border);
@@ -252,3 +282,7 @@ body {
 }
 
 /* ────────────────── Old Properties Panel (now inside RightPanel) ────────────────── */
+
+.output-list {
+  min-height: 60px;
+}
