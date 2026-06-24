@@ -7,7 +7,6 @@ import {
   useEdgesState,
   type Node,
   type Edge,
-  type OnDragOverParams,
   Background,
   Controls,
 } from "@xyflow/react";
@@ -196,42 +195,67 @@ function FlowCanvas() {
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
   const idCounter = useRef(0);
 
-  const onDragOver = useCallback((event: OnDragOverParams) => {
+  const onDragOver = useCallback((event: React.DragEvent) => {
     event.preventDefault();
-    event.dataTransfer.dropEffect = "copy";
+    if (event.dataTransfer) {
+      event.dataTransfer.dropEffect = "copy";
+    }
   }, []);
 
-  const onDrop = useCallback((event: any) => {
+  const onDrop = useCallback((event: React.DragEvent) => {
     event.preventDefault();
-    const raw = event.dataTransfer.getData("application/json");
+    const raw = event.dataTransfer?.getData("application/json");
     console.log("onDrop fired", { raw, clientX: event.clientX, clientY: event.clientY });
-    if (!raw) return;
+    if (!raw) {
+      console.warn("Drop: no data in transfer");
+      return;
+    }
     try {
       const table: TableInfo = JSON.parse(raw);
       console.log("Dropped table:", table.table);
 
-      const position = reactFlow.screenToFlowPosition({
-        x: event.clientX,
-        y: event.clientY,
-      });
-      console.log("Drop position:", position);
+      // Need to check if screenToFlowPosition is available
+      try {
+        const position = reactFlow.screenToFlowPosition({
+          x: event.clientX,
+          y: event.clientY,
+        });
+        console.log("Drop position:", position);
 
-      idCounter.current += 1;
-      const newNode: Node = {
-        id: `table-${idCounter.current}`,
-        type: "tableNode",
-        position,
-        data: {
-          label: table.table,
-          table: table.table,
-          columns: table.columns,
-          fks: table.foreign_keys,
-        },
-      };
-      setNodes((nds) => [...nds, newNode]);
-      console.log("Node added:", newNode.id);
+        idCounter.current += 1;
+        const newNode: Node = {
+          id: `table-${idCounter.current}`,
+          type: "tableNode",
+          position,
+          data: {
+            label: table.table,
+            table: table.table,
+            columns: table.columns,
+            fks: table.foreign_keys,
+          },
+        };
+        setNodes((nds) => [...nds, newNode]);
+        console.log("Node added:", newNode.id);
+      } catch (e) {
+        console.error("screenToFlowPosition error:", e);
+        // Fallback: position at center-ish of canvas
+        idCounter.current += 1;
+        const newNode: Node = {
+          id: `table-${idCounter.current}`,
+          type: "tableNode",
+          position: { x: 100, y: 100 },
+          data: {
+            label: table.table,
+            table: table.table,
+            columns: table.columns,
+            fks: table.foreign_keys,
+          },
+        };
+        setNodes((nds) => [...nds, newNode]);
+        console.log("Node added (fallback):", newNode.id);
+      }
     } catch (e) {
-      console.error("Drop error:", e);
+      console.error("Drop parse error:", e);
     }
   }, [reactFlow, setNodes]);
 
