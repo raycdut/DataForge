@@ -146,13 +146,17 @@ function Sidebar({ connections, activeConn, schema, onSelectConn, onAddClick }: 
 }
 
 /* ─── Schema Tree Node (draggable) ─── */
+let _dragPayload: TableInfo | null = null;
+
 function SchemaTableNode({ table }: { table: TableInfo }) {
   const [expanded, setExpanded] = useState(false);
   const icon = table.type === "view" ? "👁" : "⊞";
 
   function onDragStart(event: React.DragEvent) {
-    event.dataTransfer.setData("application/json", JSON.stringify(table));
+    _dragPayload = table;
+    event.dataTransfer.setData("text/plain", table.table);
     event.dataTransfer.effectAllowed = "copy";
+    console.log("dragStart:", table.table);
   }
 
   return (
@@ -204,14 +208,18 @@ function FlowCanvas() {
 
   const onDrop = useCallback((event: React.DragEvent) => {
     event.preventDefault();
-    const raw = event.dataTransfer?.getData("application/json");
-    console.log("onDrop fired", { raw, clientX: event.clientX, clientY: event.clientY });
+    let raw = event.dataTransfer?.getData("application/json");
     if (!raw) {
+      raw = event.dataTransfer?.getData("text/plain");
+    }
+    console.log("onDrop fired", { raw, clientX: event.clientX, clientY: event.clientY });
+    if (!raw && !_dragPayload) {
       console.warn("Drop: no data in transfer");
       return;
     }
     try {
-      const table: TableInfo = JSON.parse(raw);
+      const table: TableInfo = raw ? JSON.parse(raw) : _dragPayload!;
+      _dragPayload = null;
       console.log("Dropped table:", table.table);
 
       // Need to check if screenToFlowPosition is available
