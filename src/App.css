@@ -97,6 +97,11 @@ body {
   background: var(--bg-tertiary);
 }
 
+.conn-item.active {
+  background: rgba(76, 154, 255, 0.12);
+  border: 1px solid rgba(76, 154, 255, 0.3);
+}
+
 .conn-dot {
   width: 8px;
   height: 8px;
@@ -107,6 +112,100 @@ body {
 
 .conn-name {
   color: var(--text-primary);
+}
+
+/* ── Schema Tree ── */
+
+.schema-tree {
+  font-size: 13px;
+}
+
+.schema-node {
+  margin-bottom: 1px;
+}
+
+.schema-table {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 4px;
+  border-radius: 3px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.schema-table:hover {
+  background: var(--bg-tertiary);
+}
+
+.schema-expand {
+  width: 12px;
+  font-size: 10px;
+  color: var(--text-secondary);
+  flex-shrink: 0;
+}
+
+.schema-icon {
+  color: var(--accent);
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.schema-table-name {
+  flex: 1;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.schema-type {
+  font-size: 10px;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  background: var(--bg-tertiary);
+  padding: 1px 4px;
+  border-radius: 3px;
+}
+
+.schema-columns {
+  padding-left: 28px;
+  border-left: 1px solid var(--border);
+  margin-left: 6px;
+}
+
+.schema-col {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 4px;
+  font-size: 12px;
+}
+
+.col-name {
+  flex: 1;
+  color: var(--text-primary);
+}
+
+.col-type {
+  font-size: 11px;
+  color: var(--text-secondary);
+  font-family: monospace;
+}
+
+.col-badge {
+  font-size: 9px;
+  padding: 1px 4px;
+  border-radius: 3px;
+  font-weight: 600;
+}
+
+.col-badge.pk {
+  background: rgba(255, 193, 7, 0.2);
+  color: #ffc107;
+}
+
+.schema-fk {
+  color: var(--accent);
+  font-style: italic;
 }
 
 .btn {
