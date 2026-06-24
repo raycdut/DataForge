@@ -109,28 +109,6 @@ body {
   overflow: hidden;
 }
 
-.tab-bar {
-  display: flex;
-  background: var(--bg-secondary);
-  border-bottom: 1px solid var(--border);
-  padding: 0 8px;
-}
-
-.tab {
-  padding: 8px 16px;
-  background: none;
-  border: none;
-  color: var(--text-secondary);
-  cursor: pointer;
-  font-size: 13px;
-  border-bottom: 2px solid transparent;
-}
-
-.tab.active {
-  color: var(--accent);
-  border-bottom-color: var(--accent);
-}
-
 .tab-content {
   flex: 1;
   overflow: auto;
@@ -168,7 +146,49 @@ body {
   opacity: 0.6;
 }
 
-/* ───── Chat ───── */
+/* ────────────────── Right Panel (Properties | AI Chat) ────────────────── */
+
+.right-panel {
+  background: var(--bg-secondary);
+  border-left: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.right-tab-bar {
+  display: flex;
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border);
+  padding: 0 8px;
+  flex-shrink: 0;
+}
+
+.right-tab-bar .tab {
+  flex: 1;
+  padding: 8px 12px;
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-bottom: 2px solid transparent;
+  text-align: center;
+}
+
+.right-tab-bar .tab.active {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+}
+
+.right-tab-content {
+  flex: 1;
+  overflow-y: auto;
+}
+
+/* ── Chat inside right panel ── */
 
 .chat-panel {
   display: flex;
@@ -178,15 +198,15 @@ body {
 
 .chat-messages {
   flex: 1;
-  padding: 16px;
+  padding: 12px;
   overflow-y: auto;
 }
 
 .message {
-  padding: 12px;
+  padding: 10px 12px;
   border-radius: 8px;
   margin-bottom: 8px;
-  font-size: 14px;
+  font-size: 13px;
   line-height: 1.5;
 }
 
@@ -204,10 +224,11 @@ body {
 
 .chat-input {
   display: flex;
-  gap: 8px;
-  padding: 12px 16px;
+  gap: 6px;
+  padding: 10px 12px;
   border-top: 1px solid var(--border);
   background: var(--bg-secondary);
+  flex-shrink: 0;
 }
 
 .chat-input input {
@@ -215,9 +236,9 @@ body {
   background: var(--bg-tertiary);
   border: 1px solid var(--border);
   color: var(--text-primary);
-  padding: 8px 12px;
+  padding: 6px 10px;
   border-radius: 4px;
-  font-size: 14px;
+  font-size: 13px;
 }
 
 .chat-input input:disabled {
@@ -226,17 +247,8 @@ body {
 
 .chat-input .btn {
   width: auto;
-  padding: 8px 16px;
+  padding: 6px 12px;
+  font-size: 13px;
 }
 
-/* ────────────────── Properties Panel ────────────────── */
-
-.properties-panel {
-  background: var(--bg-secondary);
-  border-left: 1px solid var(--border);
-  overflow-y: auto;
-}
-
-.output-list {
-  min-height: 60px;
-}
+/* ────────────────── Old Properties Panel (now inside RightPanel) ────────────────── */

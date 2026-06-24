@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { ReactFlowProvider } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import "./App.css";
@@ -29,7 +29,7 @@ function App() {
       <div className="app-layout">
         <Sidebar />
         <MainContent />
-        <PropertiesPanel />
+        <RightPanel />
       </div>
       <Settings open={settingsOpen} onClose={() => setSettingsOpen(false)} />
     </ReactFlowProvider>
@@ -67,30 +67,11 @@ function Sidebar() {
   );
 }
 
-/* ─── Main: Canvas + Chat ─── */
+/* ─── Main: Canvas only ─── */
 function MainContent() {
-  const [activeTab, setActiveTab] = useState<"canvas" | "chat">("canvas");
-
   return (
     <main className="main-content">
-      <div className="tab-bar">
-        <button
-          className={`tab ${activeTab === "canvas" ? "active" : ""}`}
-          onClick={() => setActiveTab("canvas")}
-        >
-          Data Flow
-        </button>
-        <button
-          className={`tab ${activeTab === "chat" ? "active" : ""}`}
-          onClick={() => setActiveTab("chat")}
-        >
-          AI Chat
-        </button>
-      </div>
-
-      <div className="tab-content">
-        {activeTab === "canvas" ? <FlowCanvas /> : <ChatPanel />}
-      </div>
+      <FlowCanvas />
     </main>
   );
 }
@@ -106,6 +87,30 @@ function FlowCanvas() {
         <p className="hint">Or use the AI Chat to generate a model automatically.</p>
       </div>
     </div>
+  );
+}
+
+/* ─── Right Panel: Properties | AI Chat ─── */
+function RightPanel() {
+  const [activeTab, setActiveTab] = useState<"properties" | "chat">("properties");
+
+  return (
+    <aside className="right-panel">
+      <div className="right-tab-bar">
+        <button
+          className={`tab ${activeTab === "properties" ? "active" : ""}`}
+          onClick={() => setActiveTab("properties")}
+        >Properties</button>
+        <button
+          className={`tab ${activeTab === "chat" ? "active" : ""}`}
+          onClick={() => setActiveTab("chat")}
+        >AI Chat</button>
+      </div>
+
+      <div className="right-tab-content">
+        {activeTab === "properties" ? <PropertiesPanel /> : <ChatPanel />}
+      </div>
+    </aside>
   );
 }
 
@@ -130,7 +135,7 @@ function ChatPanel() {
 /* ─── Properties / Output Panel ─── */
 function PropertiesPanel() {
   return (
-    <aside className="properties-panel">
+    <>
       <section className="panel-section">
         <h3>Properties</h3>
         <p className="placeholder">Select a table or model to see properties</p>
@@ -148,7 +153,7 @@ function PropertiesPanel() {
         <h3>Data Quality</h3>
         <p className="placeholder">Run profile to see stats</p>
       </section>
-    </aside>
+    </>
   );
 }
 
