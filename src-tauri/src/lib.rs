@@ -98,8 +98,14 @@ pub fn run() {
                 .items(&[&add_connection, &run_analysis, &generate_dbt])
                 .build()?;
 
+            let settings_item = MenuItemBuilder::with_id("settings", "Settings...")
+                .accelerator("CmdOrCtrl+,")
+                .build(app)?;
+
+            let separator = PredefinedMenuItem::separator(app)?;
+
             let file_menu = SubmenuBuilder::new(app, "File")
-                .item(&PredefinedMenuItem::close_window(app, None)?)
+                .items(&[&settings_item, &separator, &PredefinedMenuItem::close_window(app, None)?])
                 .build()?;
 
             let help_menu = SubmenuBuilder::new(app, "Help")
@@ -125,6 +131,9 @@ pub fn run() {
                 }
                 "add_connection" => {
                     let _ = app.emit("menu-action", serde_json::json!({"action": "add_connection"}));
+                }
+                "settings" => {
+                    let _ = app.emit("menu-action", serde_json::json!({"action": "settings"}));
                 }
                 "about" => {
                     let _ = app.emit("menu-action", serde_json::json!({"action": "about"}));

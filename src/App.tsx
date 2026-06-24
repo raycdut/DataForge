@@ -1,9 +1,29 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { ReactFlowProvider } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import "./App.css";
+import Settings from "./components/Settings";
 
 function App() {
+  const [settingsOpen, setSettingsOpen] = useState(false);
+
+  useEffect(() => {
+    let unlisten: (() => void) | undefined;
+    async function setup() {
+      const { listen } = await import("@tauri-apps/api/event");
+      unlisten = await listen("menu-action", (event: any) => {
+        const { action } = event.payload;
+        if (action === "settings") {
+          setSettingsOpen(true);
+        }
+      });
+    }
+    setup();
+    return () => {
+      if (unlisten) unlisten();
+    };
+  }, []);
+
   return (
     <ReactFlowProvider>
       <div className="app-layout">
@@ -11,6 +31,7 @@ function App() {
         <MainContent />
         <PropertiesPanel />
       </div>
+      <Settings open={settingsOpen} onClose={() => setSettingsOpen(false)} />
     </ReactFlowProvider>
   );
 }
