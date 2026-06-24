@@ -270,14 +270,12 @@ function FlowCanvas() {
   // Show empty state only when no nodes
   if (nodes.length === 0) {
     return (
-      <main className="main-content">
+      <main className="main-content" onDragOver={onDragOver} onDrop={onDrop}>
         <ReactFlow
           nodes={nodes}
           edges={edges}
           onNodesChange={onNodesChange}
           onEdgesChange={onEdgesChange}
-          onDragOver={onDragOver}
-          onDrop={onDrop}
           nodeTypes={nodeTypes}
           fitView
         >
@@ -294,14 +292,12 @@ function FlowCanvas() {
   }
 
   return (
-    <main className="main-content">
+    <main className="main-content" onDragOver={onDragOver} onDrop={onDrop}>
       <ReactFlow
         nodes={nodes}
         edges={edges}
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
-        onDragOver={onDragOver}
-        onDrop={onDrop}
         nodeTypes={nodeTypes}
         fitView
       >
