@@ -1,6 +1,9 @@
 use std::io::{BufRead, BufReader, Write};
 use std::process::{Child, Command, Stdio};
 use std::sync::Mutex;
+use tauri::Manager;
+use tauri::menu::{MenuBuilder, SubmenuBuilder, MenuItemBuilder, PredefinedMenuItem};
+use tauri::Emitter;
 
 struct EngineProcess(Mutex<Option<Child>>);
 
@@ -9,7 +12,6 @@ fn engine_call(state: tauri::State<EngineProcess>, method: String, params: Strin
     let mut guard = state.0.lock().map_err(|e| e.to_string())?;
 
     if guard.is_none() {
-        // Start the Python engine process
         let child = Command::new("python3")
             .arg("-m")
             .arg("engine.main")
@@ -32,7 +34,7 @@ fn engine_call(state: tauri::State<EngineProcess>, method: String, params: Strin
             .map_err(|e| e.to_string())?;
         stdin.flush().map_err(|e| e.to_string())?;
 
-        let reader = BufReader::new(child.stdout.as_mut().ok_or("Stdout not available")?);
+        let mut reader = BufReader::new(child.stdout.as_mut().ok_or("Stdout not available")?);
         let mut response = String::new();
         reader
             .read_line(&mut response)
@@ -45,7 +47,6 @@ fn engine_call(state: tauri::State<EngineProcess>, method: String, params: Strin
 }
 
 fn find_engine_dir() -> String {
-    // In development, engine is at ../engine from src-tauri
     if let Ok(cwd) = std::env::current_dir() {
         let dev_path = cwd.parent().map(|p| p.join("engine"));
         if let Some(path) = dev_path {
@@ -54,7 +55,6 @@ fn find_engine_dir() -> String {
             }
         }
     }
-    // Fallback: check relative to executable
     if let Ok(exe) = std::env::current_exe() {
         if let Some(parent) = exe.parent() {
             let bundle_path = parent.join("engine");
@@ -80,17 +80,67 @@ pub fn run() {
                         .build(),
                 )?;
             }
+
+            // ── Build menu bar ──────────────────────────────────────
+            let generate_dbt = MenuItemBuilder::with_id("generate_dbt", "Generate dbt Project")
+                .accelerator("CmdOrCtrl+Shift+G")
+                .build(app)?;
+
+            let run_analysis = MenuItemBuilder::with_id("run_analysis", "Run Schema Analysis")
+                .accelerator("CmdOrCtrl+Shift+A")
+                .build(app)?;
+
+            let add_connection = MenuItemBuilder::with_id("add_connection", "Add Connection...")
+                .accelerator("CmdOrCtrl+Shift+N")
+                .build(app)?;
+
+            let project_menu = SubmenuBuilder::new(app, "Project")
+                .items(&[&add_connection, &run_analysis, &generate_dbt])
+                .build()?;
+
+            let file_menu = SubmenuBuilder::new(app, "File")
+                .item(&PredefinedMenuItem::close_window(app, None)?)
+                .build()?;
+
+            let help_menu = SubmenuBuilder::new(app, "Help")
+                .item(&MenuItemBuilder::with_id("about", "About DataForge").build(app)?)
+                .build()?;
+
+            let menu = MenuBuilder::new(app)
+                .items(&[&file_menu, &project_menu, &help_menu])
+                .build()?;
+
+            app.set_menu(menu)?;
+
             Ok(())
+        })
+        .on_menu_event(|app, event| {
+            let id = event.id().0.as_str();
+            match id {
+                "generate_dbt" => {
+                    let _ = app.emit("menu-action", serde_json::json!({"action": "generate_dbt"}));
+                }
+                "run_analysis" => {
+                    let _ = app.emit("menu-action", serde_json::json!({"action": "run_analysis"}));
+                }
+                "add_connection" => {
+                    let _ = app.emit("menu-action", serde_json::json!({"action": "add_connection"}));
+                }
+                "about" => {
+                    let _ = app.emit("menu-action", serde_json::json!({"action": "about"}));
+                }
+                _ => {}
+            }
         })
         .on_window_event(|window, event| {
             if let tauri::WindowEvent::CloseRequested { .. } = event {
-                // Kill engine on close
-                if let Some(state) = window.try_state::<EngineProcess>() {
-                    if let Ok(mut guard) = state.0.lock() {
-                        if let Some(ref mut child) = *guard {
-                            let _ = child.kill();
-                        }
-                    }
+                let state: tauri::State<EngineProcess> = window.state::<EngineProcess>();
+                let mut guard = match state.0.lock() {
+                    Ok(g) => g,
+                    Err(_) => return,
+                };
+                if let Some(ref mut child) = *guard {
+                    let _ = child.kill();
                 }
             }
         })
