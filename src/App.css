@@ -236,11 +236,73 @@ body {
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  height: 100%;
 }
 
 .tab-content {
   flex: 1;
   overflow: auto;
+}
+
+/* ── Flow Table Node ── */
+
+.flow-table-node {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  min-width: 200px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+  font-size: 12px;
+  overflow: hidden;
+}
+
+.flow-table-node.selected {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1.5px var(--accent), 0 2px 12px rgba(76,154,255,0.2);
+}
+
+.flow-table-header {
+  background: var(--bg-tertiary);
+  padding: 6px 12px;
+  font-weight: 600;
+  color: var(--accent);
+  border-bottom: 1px solid var(--border);
+  font-size: 13px;
+}
+
+.flow-table-cols {
+  padding: 2px 0;
+}
+
+.flow-table-col {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 12px;
+}
+
+.flow-table-col:hover {
+  background: var(--bg-tertiary);
+}
+
+.flow-table-col .col-name {
+  flex: 1;
+  color: var(--text-primary);
+  font-size: 12px;
+}
+
+.flow-table-col .col-type {
+  font-size: 10px;
+  color: var(--text-secondary);
+  font-family: monospace;
+}
+
+.flow-table-col .col-badge.pk {
+  font-size: 8px;
+  padding: 1px 3px;
+  border-radius: 2px;
+  background: rgba(255, 193, 7, 0.2);
+  color: #ffc107;
 }
 
 /* ───── Canvas ───── */
