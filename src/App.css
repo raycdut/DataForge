@@ -337,6 +337,17 @@ body {
   opacity: 0.6;
 }
 
+/* ── Visual feedback while dragging ── */
+
+body.dataforge-dragover {
+  cursor: copy;
+}
+
+body.dataforge-dragover .react-flow__pane {
+  outline: 2px dashed var(--accent);
+  outline-offset: -2px;
+}
+
 /* ────────────────── Right Panel (Properties | AI Chat) ────────────────── */
 
 .right-panel {

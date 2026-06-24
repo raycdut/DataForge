@@ -145,31 +145,35 @@ function Sidebar({ connections, activeConn, schema, onSelectConn, onAddClick }: 
   );
 }
 
-/* ─── Schema Tree Node (draggable) ─── */
-let _dragPayload: TableInfo | null = null;
-
+/* ─── Schema Tree Node (click to place on canvas) ─── */
 function SchemaTableNode({ table }: { table: TableInfo }) {
   const [expanded, setExpanded] = useState(false);
+  const [pending, setPending] = useState(false);
   const icon = table.type === "view" ? "👁" : "⊞";
 
-  function onDragStart(event: React.DragEvent) {
-    _dragPayload = table;
-    event.dataTransfer.setData("text/plain", table.table);
-    event.dataTransfer.effectAllowed = "copy";
-    console.log("dragStart:", table.table);
+  function onTableClick(e: React.MouseEvent) {
+    if (e.button !== 0) return;
+    const target = e.target as HTMLElement;
+    if (target.closest(".schema-columns")) return;
+    if ((window as any).__dfDragPayload) {
+      (window as any).__dfDragPayload(table);
+      console.log("table ready to drag:", table.table);
+    }
   }
 
   return (
     <div className="schema-node">
-      <div className="schema-table"
-        onClick={() => setExpanded(!expanded)}
-        draggable
-        onDragStart={onDragStart}
+      <div
+        className={`schema-table ${pending ? "pending" : ""}`}
+        onClick={(e) => { onTableClick(e); }}
+        onDoubleClick={() => setExpanded(!expanded)}
       >
         <span className="schema-expand">{expanded ? "▾" : "▸"}</span>
         <span className="schema-icon">{icon}</span>
         <span className="schema-table-name">{table.table}</span>
         <span className="schema-type">{table.type}</span>
+        {pending && <span className="schema-pending">click canvas</span>}
+      </div>
       </div>
       {expanded && (
         <div className="schema-columns">
@@ -198,55 +202,68 @@ function FlowCanvas() {
   const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
   const idCounter = useRef(0);
-  const mainRef = useRef<HTMLDivElement>(null);
 
-  const onDragOver = useCallback((event: globalThis.DragEvent) => {
-    event.preventDefault();
-    console.log("dragover");
-  }, []);
-
-  const onDrop = useCallback((event: globalThis.DragEvent) => {
-    event.preventDefault();
-    console.log("drop fired!");
-    if (!_dragPayload) {
-      console.warn("no payload");
-      return;
-    }
-    const table = _dragPayload;
-    _dragPayload = null;
-    console.log("dropping", table.table);
-    idCounter.current += 1;
-    const newNode: Node = {
-      id: `table-${idCounter.current}`,
-      type: "tableNode",
-      position: { x: event.clientX - 100, y: event.clientY - 40 },
-      data: {
-        label: table.table,
-        table: table.table,
-        columns: table.columns,
-        fks: table.foreign_keys,
-      },
-    };
-    setNodes((nds) => [...nds, newNode]);
-    console.log("node added");
-  }, [setNodes]);
-
-  // Attach drag-drop listeners directly to DOM
+  // Attach drag-drop listeners to body — bypasses React Flow pane
   useEffect(() => {
-    const el = mainRef.current;
-    if (!el) return;
-    el.addEventListener("dragover", onDragOver);
-    el.addEventListener("drop", onDrop);
+    let _dragPayload: TableInfo | null = null;
+
+    function onDragOver(e: DragEvent) {
+      e.preventDefault();
+      // Visual feedback: add class to body
+      document.body.classList.add("dataforge-dragover");
+    }
+
+    function onDragLeave(e: DragEvent) {
+      document.body.classList.remove("dataforge-dragover");
+    }
+
+    function onDrop(e: DragEvent) {
+      e.preventDefault();
+      document.body.classList.remove("dataforge-dragover");
+      if (!_dragPayload) return;
+
+      const table = _dragPayload;
+      _dragPayload = null;
+
+      const x = e.clientX - 200;
+      const y = e.clientY - 40;
+
+      idCounter.current += 1;
+      const newNode: Node = {
+        id: `table-${idCounter.current}`,
+        type: "tableNode",
+        position: { x, y },
+        data: {
+          label: table.table,
+          table: table.table,
+          columns: table.columns,
+          fks: table.foreign_keys,
+        },
+      };
+      setNodes((nds) => [...nds, newNode]);
+      console.log("node dropped:", table.table);
+    }
+
+    // Use capture phase to catch events before React Flow
+    document.body.addEventListener("dragover", onDragOver, true);
+    document.body.addEventListener("dragleave", onDragLeave, true);
+    document.body.addEventListener("drop", onDrop, true);
+
+    // Expose payload setter for schema tree
+    (window as any).__dfDragPayload = (t: TableInfo | null) => { _dragPayload = t; };
+
     return () => {
-      el.removeEventListener("dragover", onDragOver);
-      el.removeEventListener("drop", onDrop);
+      document.body.removeEventListener("dragover", onDragOver, true);
+      document.body.removeEventListener("dragleave", onDragLeave, true);
+      document.body.removeEventListener("drop", onDrop, true);
+      delete (window as any).__dfDragPayload;
     };
-  }, [onDragOver, onDrop]);
+  }, [setNodes]);
 
   // Show empty state only when no nodes
   if (nodes.length === 0) {
     return (
-      <main className="main-content" ref={mainRef}>
+      <main className="main-content">
         <ReactFlow
           nodes={nodes}
           edges={edges}
@@ -268,7 +285,7 @@ function FlowCanvas() {
   }
 
   return (
-    <main className="main-content" ref={mainRef}>
+    <main className="main-content">
       <ReactFlow
         nodes={nodes}
         edges={edges}
@@ -329,3 +346,6 @@ function PropertiesPanel() {
 }
 
 export default App;
+
+// ── Global: clicked table from sidebar ──
+let _pendingTable: TableInfo | null = null;
