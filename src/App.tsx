@@ -192,8 +192,8 @@ function SchemaTableNode({ table }: { table: TableInfo }) {
 /* ─── Flow Canvas (React Flow with drag-and-drop) ─── */
 function FlowCanvas() {
   const reactFlow = useReactFlow();
-  const [nodes, setNodes, onNodesChange] = useNodesState([]);
-  const [edges, setEdges, onEdgesChange] = useEdgesState([]);
+  const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
+  const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
   const idCounter = useRef(0);
 
   const onDragOver = useCallback((event: OnDragOverParams) => {
@@ -204,27 +204,35 @@ function FlowCanvas() {
   const onDrop = useCallback((event: any) => {
     event.preventDefault();
     const raw = event.dataTransfer.getData("application/json");
+    console.log("onDrop fired", { raw, clientX: event.clientX, clientY: event.clientY });
     if (!raw) return;
-    const table: TableInfo = JSON.parse(raw);
+    try {
+      const table: TableInfo = JSON.parse(raw);
+      console.log("Dropped table:", table.table);
 
-    const position = reactFlow.screenToFlowPosition({
-      x: event.clientX,
-      y: event.clientY,
-    });
+      const position = reactFlow.screenToFlowPosition({
+        x: event.clientX,
+        y: event.clientY,
+      });
+      console.log("Drop position:", position);
 
-    idCounter.current += 1;
-    const newNode: Node = {
-      id: `table-${idCounter.current}`,
-      type: "tableNode",
-      position,
-      data: {
-        label: table.table,
-        table: table.table,
-        columns: table.columns,
-        fks: table.foreign_keys,
-      },
-    };
-    setNodes((nds) => [...nds, newNode]);
+      idCounter.current += 1;
+      const newNode: Node = {
+        id: `table-${idCounter.current}`,
+        type: "tableNode",
+        position,
+        data: {
+          label: table.table,
+          table: table.table,
+          columns: table.columns,
+          fks: table.foreign_keys,
+        },
+      };
+      setNodes((nds) => [...nds, newNode]);
+      console.log("Node added:", newNode.id);
+    } catch (e) {
+      console.error("Drop error:", e);
+    }
   }, [reactFlow, setNodes]);
 
   // Show empty state only when no nodes
