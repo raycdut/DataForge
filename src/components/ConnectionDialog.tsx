@@ -9,7 +9,7 @@ interface Props {
 
 const PRESETS = [
   { label: "pg-crm (PostgreSQL)", dsn: "postgresql://postgres:postgres@localhost:5433/crm_db" },
-  { label: "orders-db (MySQL)", dsn: "mysql+pymysql://root:root@localhost:3307/orders" },
+  { label: "orders-db (MySQL)", dsn: "mysql+pymysql://root:***@localhost:3307/orders" },
 ];
 
 function ConnectionDialog({ open, onClose, onConnected }: Props) {

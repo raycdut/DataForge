@@ -13,8 +13,8 @@ fn engine_call(state: tauri::State<EngineProcess>, method: String, params: Strin
 
     if guard.is_none() {
         let child = Command::new("python3")
-            .arg("-m")
-            .arg("engine.main")
+            .arg("-c")
+            .arg("from engine import main; main()")
             .current_dir(find_engine_dir())
             .stdin(Stdio::piped())
             .stdout(Stdio::piped())

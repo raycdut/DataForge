@@ -15,7 +15,7 @@ from .analysis.schema import describe_schema, schema_to_text
 from .analysis.relations import infer_relations
 from .llm.client import call_llm, build_prompt
 from .dbt.generator import generate_dbt_project
-from .config.settings import load_config
+from .config import load_config
 
 
 def handle_request(req: dict[str, Any]) -> dict[str, Any]:
@@ -101,7 +101,7 @@ def handle_request(req: dict[str, Any]) -> dict[str, Any]:
         cfg = load_config()
         if "key" in params:
             cfg[params["key"]] = params["value"]
-            from .config.settings import save_config
+            from .config import save_config
             save_config(cfg)
         return {"result": cfg}
 
