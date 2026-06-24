@@ -198,79 +198,55 @@ function FlowCanvas() {
   const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
   const idCounter = useRef(0);
+  const mainRef = useRef<HTMLDivElement>(null);
 
-  const onDragOver = useCallback((event: React.DragEvent) => {
+  const onDragOver = useCallback((event: globalThis.DragEvent) => {
     event.preventDefault();
-    if (event.dataTransfer) {
-      event.dataTransfer.dropEffect = "copy";
-    }
+    console.log("dragover");
   }, []);
 
-  const onDrop = useCallback((event: React.DragEvent) => {
+  const onDrop = useCallback((event: globalThis.DragEvent) => {
     event.preventDefault();
-    let raw = event.dataTransfer?.getData("application/json");
-    if (!raw) {
-      raw = event.dataTransfer?.getData("text/plain");
-    }
-    console.log("onDrop fired", { raw, clientX: event.clientX, clientY: event.clientY });
-    if (!raw && !_dragPayload) {
-      console.warn("Drop: no data in transfer");
+    console.log("drop fired!");
+    if (!_dragPayload) {
+      console.warn("no payload");
       return;
     }
-    try {
-      const table: TableInfo = raw ? JSON.parse(raw) : _dragPayload!;
-      _dragPayload = null;
-      console.log("Dropped table:", table.table);
+    const table = _dragPayload;
+    _dragPayload = null;
+    console.log("dropping", table.table);
+    idCounter.current += 1;
+    const newNode: Node = {
+      id: `table-${idCounter.current}`,
+      type: "tableNode",
+      position: { x: event.clientX - 100, y: event.clientY - 40 },
+      data: {
+        label: table.table,
+        table: table.table,
+        columns: table.columns,
+        fks: table.foreign_keys,
+      },
+    };
+    setNodes((nds) => [...nds, newNode]);
+    console.log("node added");
+  }, [setNodes]);
 
-      // Need to check if screenToFlowPosition is available
-      try {
-        const position = reactFlow.screenToFlowPosition({
-          x: event.clientX,
-          y: event.clientY,
-        });
-        console.log("Drop position:", position);
-
-        idCounter.current += 1;
-        const newNode: Node = {
-          id: `table-${idCounter.current}`,
-          type: "tableNode",
-          position,
-          data: {
-            label: table.table,
-            table: table.table,
-            columns: table.columns,
-            fks: table.foreign_keys,
-          },
-        };
-        setNodes((nds) => [...nds, newNode]);
-        console.log("Node added:", newNode.id);
-      } catch (e) {
-        console.error("screenToFlowPosition error:", e);
-        // Fallback: position at center-ish of canvas
-        idCounter.current += 1;
-        const newNode: Node = {
-          id: `table-${idCounter.current}`,
-          type: "tableNode",
-          position: { x: 100, y: 100 },
-          data: {
-            label: table.table,
-            table: table.table,
-            columns: table.columns,
-            fks: table.foreign_keys,
-          },
-        };
-        setNodes((nds) => [...nds, newNode]);
-        console.log("Node added (fallback):", newNode.id);
-      }
-    } catch (e) {
-      console.error("Drop parse error:", e);
-    }
-  }, [reactFlow, setNodes]);
+  // Attach drag-drop listeners directly to DOM
+  useEffect(() => {
+    const el = mainRef.current;
+    if (!el) return;
+    el.addEventListener("dragover", onDragOver);
+    el.addEventListener("drop", onDrop);
+    return () => {
+      el.removeEventListener("dragover", onDragOver);
+      el.removeEventListener("drop", onDrop);
+    };
+  }, [onDragOver, onDrop]);
 
   // Show empty state only when no nodes
   if (nodes.length === 0) {
     return (
-      <main className="main-content" onDragOver={onDragOver} onDrop={onDrop}>
+      <main className="main-content" ref={mainRef}>
         <ReactFlow
           nodes={nodes}
           edges={edges}
@@ -292,7 +268,7 @@ function FlowCanvas() {
   }
 
   return (
-    <main className="main-content" onDragOver={onDragOver} onDrop={onDrop}>
+    <main className="main-content" ref={mainRef}>
       <ReactFlow
         nodes={nodes}
         edges={edges}
